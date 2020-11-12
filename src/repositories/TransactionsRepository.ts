@@ -14,15 +14,9 @@ interface CreateTransactionDTO {
 
 class TransactionsRepository {
   private transactions: Transaction[];
-  private balance: Balance
 
   constructor() {
     this.transactions = [];
-    this.balance = {
-      income:0,
-      outcome:0,
-      total:0
-    }
   }
 
   public all(): Transaction[] {
@@ -30,23 +24,31 @@ class TransactionsRepository {
   }
 
   public getBalance(): Balance {
-    return this.balance
+    const {income, outcome} = this.transactions.reduce((acuumulator, transaction: Transaction)=>{
+      switch (transaction.type) {
+        case "income":
+          acuumulator.income += transaction.value
+          break;
+        case "outcome":
+            acuumulator.outcome += transaction.value
+            break;
+        default:
+          break;
+      }
+
+      return acuumulator
+    }, {
+      income: 0,
+      outcome: 0
+    })
+
+    const total = income - outcome
+
+    return {income, outcome, total}
   }
 
   public create({title,value,type}: CreateTransactionDTO): Transaction {
     const transaction = new Transaction({title,value,type})
-    const balance = this.getBalance()
-    
-    if (type === "income"){
-      balance.income += value
-      balance.total += value
-    } else if (type === "outcome"){
-      balance.outcome += value
-      balance.total -= value
-    }
-    
-
-    this.balance = balance
 
     this.transactions.push(transaction)
 
